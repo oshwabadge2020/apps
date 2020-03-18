@@ -24,7 +24,7 @@ def main():
     font = terminalio.FONT
 
     #struct_time(tm_year=2000, tm_mon=1, tm_mday=1, tm_hour=0, tm_min=6, tm_sec=30, tm_wday=5, tm_yday=1, tm_isdst=-1)
-    for i in range(0, 20):
+    while True:
         #normally we'll do this as close to display as possible, add offset if needed
         current_time = time.localtime()
 
