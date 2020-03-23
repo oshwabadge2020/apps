@@ -2,7 +2,7 @@
 The circuitpython application code that will run on the badge.
 
 ## sensor_test
-* initial test code from Michael Welling
+* initial test code from Michael Welling (@mwelling)
 * prints i2c sensor data to LCD and serial
 ```Temperature: 27.8 C
 Gas: 38599 ohm
