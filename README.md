@@ -1,7 +1,7 @@
 # apps
 The circuitpython application code that will run on the badge.
 
-## branch: welling_initial_test
+## sensor_test
 * initial test code from Michael Welling
 * prints i2c sensor data to LCD and serial
 ```Temperature: 27.8 C
@@ -16,6 +16,8 @@ Temperature: 23.500C
 ```
 * note: on early prototype versions of the badge, the i2c bus was shorted so this code would get stuck as it can not access i2c bus
 
+## loader_proto
+*  @siddacious attempt to make an apps menu
 
-## branch: loader_proto
-* Brian (siddacious) attempt to make an apps menu
+## factory_test
+* factory test by @acamilo that displays QR
