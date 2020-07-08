@@ -1,0 +1,6 @@
+{
+  "rotation": 270,
+  "default_app": "clock.py",
+  "time" : [2020, 3, 6, 2, 14, 9, 3, -1, 0],
+  "splash_filename": "moocow"
+}
