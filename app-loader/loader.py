@@ -8,58 +8,52 @@ from time import sleep
 import terminalio
 from adafruit_display_text import label
 import displayio
+import json
 
 # TODO:
 """
-# default app to run; override by holding buttons
-# set screen and button rotation
 # auto dim/shut off screen by looking for significant motion via accel
 # battery gauge
-
-
-
-
-
+"""
+default_app = None
+# load rotation config; hardcoded for now
+board.DISPLAY.rotation = 0
 
 ###
 SELECT = 1 << 0
 NEXT = 1 << 1
 PREV = 1 << 2
 COLOR = 0xFFFFFF
-FONT = terminalio.FONT
 TOP_OFFSET = 3
 MARGIN = 3
-APP_DIR = "/apps"
+# "/apps" = "/apps"
 MENU_START = 10+TOP_OFFSET+MARGIN
-FRAME_FILENAME = "/apps/loader/frame2.bmp"
-SPLASH_FILENAME = "/apps/loader/10yrs_240.bmp"
-CURSOR_FILENAME = "/apps/loader/8px_cursors.bmp"
-# load rotation config; hardcoded for now
-board.DISPLAY.rotation = 90
+
+apps_list = os.listdir("/apps")
+root_files = os.listdir("/")
 class Loader:
     def __init__(self):
-        self.sw1 = None
-        self.sw2 = None
-        self.sw3 = None
-        self.sw4 = None
+        self.buttons = []
 
         self.display = board.DISPLAY
         self.display.brightness = 1.0
         self.cursor_index = 0
-        self.init_cursor()
 
         self.files_available = self.check_for_apps()
         self.file_count = len(self.files_available)
+        self.loader_initialized = False
 
+    def _initialize(self):
+        self.init_cursor()
         self.init_buttons()
         self.init_menu()
-
         self.display.show(self.program_menu)
+        self.loader_initialized = True
 
     def init_cursor(self):
         self.cursor_group = displayio.Group()
         cursor_bmp, cursor_pal = adafruit_imageload.load(
-            CURSOR_FILENAME,
+            "/apps/loader/8px_cursors.bmp",
             bitmap=displayio.Bitmap,
             palette=displayio.Palette
         )
@@ -76,24 +70,16 @@ class Loader:
         self.cursor.y = MENU_START+(self.cursor_index*8)
 
     def init_menu(self):
-        frame_bmp, frame_pal = adafruit_imageload.load(FRAME_FILENAME, bitmap=displayio.Bitmap, palette=displayio.Palette)
-        print("Frame palette", frame_pal[0])
-        print("Frame palette", frame_pal[1])
-        frame_pal.make_transparent(0)
-        frame_pal[1] = 0xffffff
-        frame_pal[0] = 0x0
-        frame_pal.make_transparent(1)
         self.program_menu = displayio.Group(max_size=10, scale=2)
-        loader_banner = label.Label(FONT, text="Choose to Run", color=COLOR)
+        loader_banner = label.Label(terminalio.FONT, text="Choose to Run", color=COLOR)
         loader_banner.x = 10
         loader_banner.y = TOP_OFFSET
         self.program_menu.append(loader_banner)
-        frame = displayio.TileGrid(frame_bmp, pixel_shader=frame_pal)
 
         for list_index, program_name in enumerate(self.files_available):
             menu_item_str = "%s"%'{:>5}'.format(program_name)
 
-            menu_item = label.Label(FONT, text=menu_item_str, color=COLOR)
+            menu_item = label.Label(terminalio.FONT, text=menu_item_str, color=COLOR)
             menu_item.x = 10
             menu_item.y = MENU_START+(list_index*10)
             self.program_menu.append(menu_item)
@@ -101,25 +87,26 @@ class Loader:
 
         self.program_menu.append(self.cursor)
 
-        self.program_menu.append(frame)
     def init_buttons(self):
-        self.sw1 = digitalio.DigitalInOut(board.BUTTON_SW1)
-        self.sw2 = digitalio.DigitalInOut(board.BUTTON_SW2)
-        self.sw3 = digitalio.DigitalInOut(board.BUTTON_SW3)
-        self.sw4 = digitalio.DigitalInOut(board.BUTTON_SW4)
-        self.pad = gamepad.GamePad(self.sw1, self.sw2, self.sw3, self.sw4)
+        for butt in [board.BUTTON_SW1 ,board.BUTTON_SW2 ,board.BUTTON_SW3 ,board.BUTTON_SW4]:
+            self.buttons.append(digitalio.DigitalInOut(butt))
+        self.pad = gamepad.GamePad(*self.buttons)
 
 
-    def release_buttons(self):
-        self.sw1.deinit()
-        self.sw2.deinit()
-        self.sw3.deinit()
-        self.sw4.deinit()
+    # def release_buttons(self):
+    #     if self.sw1:
+    #         self.sw1.deinit()
+    #     if self.sw2:
+    #         self.sw2.deinit()
+    #     if self.sw3:
+    #         self.sw3.deinit()
+    #     if self.sw4:
+    #         self.sw4.deinit()
 
     def run_file(self, filename):
-        module_name = APP_DIR+"/"+filename.strip(".py")
+        module_name = "/apps"+"/"+filename.strip(".py")
         mod = __import__(module_name)
-        self.release_buttons()
+        # self.release_buttons()
         mod.main()
         self.display.show(None)
         self.init_buttons()
@@ -129,7 +116,7 @@ class Loader:
             if  buttons & NEXT:
                 break
 
-    def check_for_apps(self, appdir=APP_DIR):
+    def check_for_apps(self, appdir="/apps"):
         file_list = []
         try:
             file_list = os.listdir(appdir)
@@ -138,7 +125,11 @@ class Loader:
 
         return file_list
 
-    def run(self):
+    def run(self, file=None):
+        if file:
+            self.run_file(file)
+        if not self.loader_initialized:
+            self._initialize()
         last_update = time.monotonic()
         i = 0
         current_time = time.monotonic()
@@ -171,18 +162,23 @@ if __name__ == "__main__":
 
     display = board.DISPLAY
     # Open the file
-    splash_bmp, splash_pal = adafruit_imageload.load(SPLASH_FILENAME, bitmap=displayio.Bitmap, palette=displayio.Palette)
+    # if splash_filename in root_files:
+    #     splash_bmp, splash_pal = adafruit_imageload.load(splash_filename, bitmap=displayio.Bitmap, palette=displayio.Palette)
 
-    # Create a Group to hold the TileGrid
-    splash_group = displayio.Group()
-    splash = displayio.TileGrid(splash_bmp, pixel_shader=splash_pal)
-    splash_group.append(splash)
-    splash_group.scale = 1
-    display.show(splash_group)
-    sleep(0.5)
-    del(splash_bmp)
-    del(splash_pal)
+    #     # Create a Group to hold the TileGrid
+    #     splash_group = displayio.Group()
+    #     splash = displayio.TileGrid(splash_bmp, pixel_shader=splash_pal)
+    #     splash_group.append(splash)
+    #     splash_group.scale = 1
+    #     display.show(splash_group)
+    #     sleep(0.5)
+    #     del(splash_bmp)
+    #     del(splash_pal)
 
 
     loader = Loader()
+    print("made loader")
+    sleep(2)
+    if default_app and default_app in  os.listdir("/apps/"):
+        loader.run(default_app)
     loader.run()

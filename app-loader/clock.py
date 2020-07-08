@@ -5,11 +5,10 @@ from adafruit_display_text import label
 import time
 import rtc
 from adafruit_bitmap_font import bitmap_font
-
-#               Year, Month, doM    Hour, Mins, Secs, doY, isDST?
-CURRENT_TIME = (2020, 3, 6, 8, 53, 9, 3, -1, 0)
-clock = rtc.RTC()
-clock.datetime = CURRENT_TIME
+import json
+import os
+# Year, Month, doM    Hour, Mins, Secs, doY, isDST?
+current_time = (2020, 3, 6, 4, 45, 9, 3, -1, 0)
 BLUE = 0x0000FF
 RED = 0xFF0000
 R2 = 0xFF8888
@@ -18,10 +17,18 @@ PURPLE = 0xFF00FF
 Y_OFFSET = 120
 # kourier = bitmap_font.load_font("/kourier.bdf")
 helv = bitmap_font.load_font("/Helvetica-Bold-16.bdf")
+
+current_time = None
+if "config.json" in os.listdir("/"):
+    with open("/config.json", "r") as f:
+        config = json.load(f)
+        if "time" in config:
+            current_time = tuple(config['time'])
+
+clock = rtc.RTC()
+clock.datetime = current_time
 def main():
     display = board.DISPLAY
-
-    font = terminalio.FONT
 
     #struct_time(tm_year=2000, tm_mon=1, tm_mday=1, tm_hour=0, tm_min=6, tm_sec=30, tm_wday=5, tm_yday=1, tm_isdst=-1)
     while True:
