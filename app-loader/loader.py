@@ -31,6 +31,16 @@ MENU_START = 10+TOP_OFFSET+MARGIN
 
 apps_list = os.listdir("/apps")
 root_files = os.listdir("/")
+if "config.json" in root_files:
+    with open("/config.json", "r") as f:
+        config = json.load(f)
+        if "rotation" in config:
+            board.DISPLAY.rotation = config['rotation']
+        if "default_app" in config:
+            default_app = config['default_app']
+        if "splash_filename" in config:
+            
+            splash_filename = config['splash_filename']
 class Loader:
     def __init__(self):
         self.buttons = []
@@ -93,15 +103,9 @@ class Loader:
         self.pad = gamepad.GamePad(*self.buttons)
 
 
-    # def release_buttons(self):
-    #     if self.sw1:
-    #         self.sw1.deinit()
-    #     if self.sw2:
-    #         self.sw2.deinit()
-    #     if self.sw3:
-    #         self.sw3.deinit()
-    #     if self.sw4:
-    #         self.sw4.deinit()
+    def release_buttons(self):
+       for button in self.buttons:
+           button.deinit()
 
     def run_file(self, filename):
         module_name = "/apps"+"/"+filename.strip(".py")
@@ -177,8 +181,6 @@ if __name__ == "__main__":
 
 
     loader = Loader()
-    print("made loader")
-    sleep(2)
     if default_app and default_app in  os.listdir("/apps/"):
         loader.run(default_app)
     loader.run()
