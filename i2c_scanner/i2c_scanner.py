@@ -4,7 +4,7 @@ import displayio
 import board
 from adafruit_display_text import label
 
-Y_OFFSET=20
+Y_OFFSET=100
 X_INDENT=10
 def main():
   display = board.DISPLAY
