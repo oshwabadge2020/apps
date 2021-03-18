@@ -21,3 +21,7 @@ Temperature: 23.500C
 
 ## factory_test
 * factory test by @acamilo that displays QR
+
+## blue_uart_simple
+* A simple BLE application that allows other applications to interact over BLE using simple line-delimited messages
+    * Includes an experimental chrome extension to use the badge as a Meet remote (mute/unmute).
